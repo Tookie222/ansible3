@@ -1,0 +1,76 @@
+---
+- name: Deploy and configure Chrony time service on all managed nodes
+  hosts: all
+  become: yes
+
+  tasks:
+
+    # Install Chrony on RedHat-based systems
+    - name: Install Chrony on RedHat
+      yum:
+        name: chrony
+        state: present
+      when: ansible_os_family == "RedHat"
+      notify: Restart Chrony
+
+    # Install Chrony on Debian-based systems
+    - name: Install Chrony on Debian
+      apt:
+        name: chrony
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+      notify: Restart Chrony
+
+    # Configure Chrony for RedHat
+    - name: Configure Chrony on RedHat
+      copy:
+        dest: /etc/chrony.conf
+        content: |
+          server 0.rhel.pool.ntp.org iburst
+          server 1.rhel.pool.ntp.org iburst
+          driftfile /var/lib/chrony/drift
+          rtcsync
+        owner: root
+        group: root
+        mode: '0644'
+      when: ansible_os_family == "RedHat"
+      notify: Restart Chrony
+
+    # Configure Chrony for Debian
+    - name: Configure Chrony on Debian
+      copy:
+        dest: /etc/chrony/chrony.conf
+        content: |
+          pool 0.debian.pool.ntp.org iburst
+          pool 1.debian.pool.ntp.org iburst
+          pool 2.debian.pool.ntp.org iburst
+          driftfile /var/lib/chrony/chrony.drift
+          rtcsync
+        owner: root
+        group: root
+        mode: '0644'
+      when: ansible_os_family == "Debian"
+      notify: Restart Chrony
+
+    # Ensure Chrony service is running and enabled on RedHat
+    - name: Ensure Chrony service is enabled and running (RedHat)
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+      when: ansible_os_family == "RedHat"
+
+    # Ensure Chrony service is running and enabled on Debian
+    - name: Ensure Chrony service is enabled and running (Debian)
+      service:
+        name: chrony
+        state: started
+        enabled: yes
+      when: ansible_os_family == "Debian"
+
+  handlers:
+    - name: Restart Chrony
+      service:
+        name: "{{ 'chronyd' if ansible_os_family == 'RedHat' else 'chrony' }}"
+        state: restarted
