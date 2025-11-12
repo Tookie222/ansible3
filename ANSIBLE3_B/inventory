@@ -1,0 +1,8 @@
+[debian_family]
+debian1 ansible_host=3.111.34.21 ansible_user=ubuntu
+debian2 ansible_host=3.108.51.6 ansible_user=ubuntu
+
+[redhat_family]
+redhat ansible_host=65.0.106.37 ansible_user=ec2-user
+
+

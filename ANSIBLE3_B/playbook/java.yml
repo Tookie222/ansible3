@@ -1,0 +1,24 @@
+- name: Install default Java
+  hosts: all
+  become: yes
+  tasks:
+    - name: Install Java on Debian/Ubuntu
+      apt:
+        name: default-jdk
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install Java on RedHat/Amazon Linux
+      yum:
+        name: java-1.8.0-openjdk
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Show Java version
+      command: java -version
+      register: java_ver
+      ignore_errors: yes
+
+    - debug:
+        var: java_ver.stderr_lines
